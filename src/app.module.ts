@@ -5,10 +5,12 @@ import KeyvRedis from '@keyv/redis';
 import { Keyv } from 'keyv';
 import { KeyvCacheableMemory } from 'cacheable';
 import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
     CacheModule.registerAsync({
+      isGlobal: true,
       useFactory: async () => {
         return {
           stores: [
@@ -20,6 +22,7 @@ import { AppService } from './app.service';
         };
       },
     }),
+    PrismaModule,
   ],
   controllers: [AppController],
 })
