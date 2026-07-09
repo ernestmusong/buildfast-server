@@ -3,7 +3,6 @@ import { AppController } from './app.controller';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis from '@keyv/redis';
 import { Keyv } from 'keyv';
-import { KeyvCacheableMemory } from 'cacheable';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -14,9 +13,7 @@ import { PrismaModule } from './prisma/prisma.module';
       useFactory: async () => {
         return {
           stores: [
-            new Keyv({
-              store: new KeyvCacheableMemory({ ttl: 60000, lruSize: 5000 }),
-            }),
+            new Keyv({ ttl: 60000 }),
             new KeyvRedis('redis://localhost:6379'),
           ],
         };
@@ -25,5 +22,6 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
   ],
   controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
