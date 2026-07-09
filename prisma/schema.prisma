@@ -14,3 +14,115 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  USER
+  MERCHANT
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  merchant     Merchant?
+}
+
+enum MerchantPhoneDirection {
+  DEPOSIT
+  WITHDRAW
+}
+
+enum MerchantEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum MerchantTransactionType {
+  TOPUP
+  WITHDRAWAL
+}
+
+enum MerchantTransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Merchant {
+  id              String                   @id @default(uuid())
+  userId          String                   @unique
+  websiteUrl      String
+  callbackUrl     String
+  apiKey          String                   @unique
+  allowDeposit    Boolean                  @default(true)
+  allowWithdrawal Boolean                  @default(false)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneWhitelist  MerchantPhoneWhitelist[]
+  applications    MerchantApplication[]
+  accounts        MerchantAccount[]
+  transactions    MerchantTransaction[]
+}
+
+model MerchantPhoneWhitelist {
+  id          String                 @id @default(uuid())
+  merchantId  String
+  phoneNumber String
+  direction   MerchantPhoneDirection
+  isActive    Boolean                @default(true)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  merchant    Merchant               @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantId, phoneNumber, direction])
+}
+
+model MerchantApplication {
+  id          String              @id @default(uuid())
+  merchantId  String
+  environment MerchantEnvironment
+  name        String
+  websiteUrl  String
+  callbackUrl String
+  apiKey      String              @unique
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  merchant    Merchant            @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantId, environment, name])
+}
+
+model MerchantAccount {
+  id          String              @id @default(uuid())
+  merchantId  String
+  environment MerchantEnvironment
+  balance     Decimal             @default(0) @db.Decimal(18, 2)
+  currency    String              @default("XAF")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  merchant    Merchant            @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantId, environment])
+}
+
+model MerchantTransaction {
+  id          String                    @id @default(uuid())
+  merchantId  String
+  environment MerchantEnvironment
+  type        MerchantTransactionType
+  status      MerchantTransactionStatus @default(COMPLETED)
+  amount      Decimal                   @db.Decimal(18, 2)
+  currency    String                    @default("XAF")
+  reference   String                    @unique
+  description String?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  merchant    Merchant                  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+}

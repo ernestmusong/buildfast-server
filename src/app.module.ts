@@ -5,6 +5,8 @@ import KeyvRedis from '@keyv/redis';
 import { Keyv } from 'keyv';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { MerchantsModule } from './merchants/merchants.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { PrismaModule } from './prisma/prisma.module';
       },
     }),
     PrismaModule,
+    AuthModule,
+    MerchantsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
